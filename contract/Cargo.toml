@@ -1,0 +1,22 @@
+[package]
+name = "battleship-contract"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+arrayref = "0.3.6"
+base64 = "0.13.0"
+near-sdk = "3.1.0"
+risc0_verify = { path = "../risc0-verify" }
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
+

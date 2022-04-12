@@ -1,0 +1,6 @@
+[submodule "risc0"]
+	path = risc0
+	url = git@github.com:risc0/risc0.git
+[submodule "risc0-verify"]
+	path = risc0-verify
+	url = git@github.com:risc0/risc0-verify.git
