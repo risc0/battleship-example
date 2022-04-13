@@ -9,8 +9,12 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 arrayref = "0.3.6"
 base64 = "0.13.0"
+battleship_core = { path = "../risc0/examples/rust/battleship/core/" }
 near-sdk = "3.1.0"
 risc0_verify = { path = "../risc0-verify" }
+serde = "1.0.118"
+zkvm_core= { path = "../risc0/risc0/zkvm/sdk/rust/core/" }
+zkvm_serde = { path = "../risc0/risc0/zkvm/sdk/rust/serde/", features=["std"] }
 
 [profile.release]
 codegen-units = 1

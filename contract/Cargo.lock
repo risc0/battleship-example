@@ -58,8 +58,20 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "base64",
+ "battleship_core",
  "near-sdk",
  "risc0_verify",
+ "serde",
+ "zkvm_core",
+ "zkvm_serde",
+]
+
+[[package]]
+name = "battleship_core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "zkvm_core",
 ]
 
 [[package]]
@@ -572,6 +584,7 @@ dependencies = [
  "log",
  "rand",
  "rand_core",
+ "serde",
  "sha2 0.10.2",
  "test-log",
  "typenum",
@@ -766,3 +779,17 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "zkvm_core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "zkvm_serde"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
