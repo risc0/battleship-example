@@ -1,10 +1,26 @@
 const nearAPI = require("near-api-js");
 const fs = require("fs");
+const axios = require('axios')
+
+const user_acct = "melvinz.testnet";
+const contract_acct = "dev-1649886060949-33800566037764";
+const game_name = "my_fun_game";
+const init_state = {
+  "ships": [
+    {"pos":{"x":2,"y":3},"dir":"Vertical","hit_mask":0},
+    {"pos":{"x":3,"y":1},"dir":"Horizontal","hit_mask":0},
+    {"pos":{"x":4,"y":7},"dir":"Vertical","hit_mask":0},
+    {"pos":{"x":7,"y":5},"dir":"Horizontal","hit_mask":0},
+    {"pos":{"x":7,"y":7},"dir":"Horizontal","hit_mask":0}
+  ],"salt":3735928559
+};
+
 
 async function main() {
   console.log("Hello world");
 
-  const content = fs.readFileSync("seal.bin").toString('base64')
+  res = await axios.post('http://127.0.0.1:3000/prove_init', init_state);
+  receipt = res.data;
 
   const { keyStores } = nearAPI;
   const homedir = require("os").homedir();
@@ -21,20 +37,23 @@ async function main() {
       explorerUrl: "https://explorer.testnet.near.org",
   };
 
-  dev_acct = "dev-1649632081005-14076690372915";
   // connect to NEAR
   const { connect } = nearAPI;
   const { utils } = nearAPI;
   near = await connect(config);
   console.log("Connected");
-  account = await near.account(dev_acct);
+  account = await near.account(user_acct);
   console.log(await account.getAccountBalance());
 
   const MAX_GAS = "300000000000000";
   const result = await account.functionCall({
-    contractId : dev_acct, 
-    methodName : "verify",
-    args: {seal_str : content },
+    contractId : contract_acct, 
+    methodName : "new_game",
+    args: {
+      "name": game_name,
+      "receipt_str": receipt
+    },
+
     gas: MAX_GAS
   });
 

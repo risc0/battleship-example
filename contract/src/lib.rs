@@ -41,12 +41,7 @@ impl Default for BattleshipContract {
 
 pub fn verify_receipt(str: &String) -> Vec<u32> {
     let as_bytes = base64::decode(str).unwrap();
-    assert!(as_bytes.len() % 4 == 0);
-    let mut as_words : Vec<u32> = vec![];
-    for i in 0..(as_bytes.len()/4) {
-        as_words.push(u32::from_le_bytes(*array_ref![&as_bytes, i * 4, 4]));
-    }
-    let receipt = zkvm_serde::from_slice::<Receipt>(&as_words).unwrap();
+    let receipt = bincode::deserialize::<Receipt>(&as_bytes).unwrap();
     receipt.verify();
     receipt.get_journal_u32()
 }
