@@ -3,7 +3,7 @@ const fs = require("fs");
 const axios = require('axios')
 
 const user_acct = "melvinz.testnet";
-const contract_acct = "dev-1649886060949-33800566037764";
+const contract_acct = "dev-1650087915725-26749817965169";
 const game_name = "my_fun_game";
 const init_state = {
   "ships": [
@@ -14,12 +14,17 @@ const init_state = {
     {"pos":{"x":7,"y":7},"dir":"Horizontal","hit_mask":0}
   ],"salt":3735928559
 };
-
+const turn_state = {
+  "state": init_state,
+  "shot":{ "x":5,"y":5}
+};
 
 async function main() {
   console.log("Hello world");
 
-  res = await axios.post('http://127.0.0.1:3000/prove_init', init_state);
+  // Either init for new/join or turn for normal turns
+  //res = await axios.post('http://127.0.0.1:3000/prove/init', init_state);
+  res = await axios.post('http://127.0.0.1:3000/prove/turn', turn_state);
   receipt = res.data;
 
   const { keyStores } = nearAPI;
@@ -46,6 +51,8 @@ async function main() {
   console.log(await account.getAccountBalance());
 
   const MAX_GAS = "300000000000000";
+  // One example of each call, uncomment to pick
+  /*
   const result = await account.functionCall({
     contractId : contract_acct, 
     methodName : "new_game",
@@ -53,7 +60,31 @@ async function main() {
       "name": game_name,
       "receipt_str": receipt
     },
-
+    gas: MAX_GAS
+  });
+  */
+  /*
+  const result = await account.functionCall({
+    contractId : contract_acct, 
+    methodName : "join_game",
+    args: {
+      "name": game_name,
+      "shot_x": 5,
+      "shot_y": 5,
+      "receipt_str": receipt
+    },
+    gas: MAX_GAS
+  });
+  */
+  const result = await account.functionCall({
+    contractId : contract_acct, 
+    methodName : "turn",
+    args: {
+      "name": game_name,
+      "shot_x": 5,
+      "shot_y": 5,
+      "receipt_str": receipt
+    },
     gas: MAX_GAS
   });
 

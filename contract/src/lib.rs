@@ -4,9 +4,10 @@ use near_sdk::collections::UnorderedMap;
 use near_sdk::near_bindgen;
 use near_sdk::env;
 
-use serde::{Deserialize, Serialize};
 use arrayref::array_ref;
+use battleship_core::{RoundCommit, HitType};
 use risc0_verify::receipt::Receipt;
+use serde::{Deserialize, Serialize};
 use zkvm_core::Digest;
 
 #[derive(Default, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
@@ -25,6 +26,8 @@ pub struct GameState {
     next_turn: u32,  
     p1: PlayerState,
     p2: PlayerState,
+    last_hit: u8, // 0 = miss, 1 = hit, 2 = sunk
+    sunk_what: u8, // Which ship was sunk
 }
 
 #[near_bindgen]
@@ -68,16 +71,74 @@ impl BattleshipContract {
                 shot_y: 0,
             },
             p2: PlayerState::default(),
+            last_hit: 0,
+            sunk_what: 0,
         });
     }
 
-    /*
     // Set's p2's state, and makes the first shot at p1
-    pub fn join_game(name: String, init_proof: String, shot_x: u32, shot_y: u32) {
+    pub fn join_game(&mut self, name: String, receipt_str: String, shot_x: u32, shot_y: u32) {
+        // Get game record (panic if not there)
+        let mut state = self.games.get(&name).unwrap();
+        // Verify we are are on turn 0
+        assert!(state.next_turn == 0);
+        // Set turn to 1
+        state.next_turn = 1;
+        // Verify the player has a valid initial state
+        let journal = verify_receipt(&receipt_str);
+        let digest = zkvm_serde::from_slice::<Digest>(&journal).unwrap();
+        // Update player 2 starting state + set shot
+        state.p2 = PlayerState {
+            id: env::signer_account_id(),
+            board: *array_ref![digest.as_slice(), 0, 8],
+            shot_x,
+            shot_y,
+        };
+        // Write back to contract
+        self.games.insert(&name, &state);
     }
+
     // Do a normal turn
-    pub fn turn(name: String, update_proof: String, shot_x: u32, shot_y: u32) {
+    pub fn turn(&mut self, name: String, receipt_str: String, shot_x: u32, shot_y: u32) {
+        // Get game record (panic if not there)
+        let mut state = self.games.get(&name).unwrap();
+        // Verify we are are on turn 1 or 2
+        assert!(state.next_turn >= 1);
+        // Get ref to player current player (responding prior shot, making new one)
+        let (cur_player, prev_player) = if state.next_turn == 1 { 
+            (&mut state.p1, &mut state.p2) 
+        } else {
+            (&mut state.p2, &mut state.p1)
+        };
+        // Verify the right user is playing
+        assert!(cur_player.id == env::signer_account_id());
+        // Verify the proof and extract as a RoundCommit
+        let journal = verify_receipt(&receipt_str);
+        let commit = zkvm_serde::from_slice::<RoundCommit>(&journal).unwrap();
+        // Make sure the prior state matches the current state
+        assert!(cur_player.board.as_slice() == commit.old_state.as_slice());
+        // Make sure the response matches the prior shot
+        assert!(commit.shot.x == prev_player.shot_x);
+        assert!(commit.shot.y == prev_player.shot_y);
+        // Set the hit status
+        match commit.hit {
+            HitType::Miss => { state.last_hit = 0; },
+            HitType::Hit => { state.last_hit = 1; },
+            HitType::Sunk(ship) => { state.last_hit = 2; state.sunk_what = ship; },
+        };
+        // Update the current players state
+        cur_player.board = *array_ref![commit.new_state.as_slice(), 0, 8];
+        // Set the new shot
+        cur_player.shot_x = shot_x;
+        cur_player.shot_y = shot_y;
+        // Update which player's turn it is
+        state.next_turn = 3 - state.next_turn;
+        // Write back to contract
+        self.games.insert(&name, &state);
     }
-    */
+
+    pub fn get_game_state(&self, name: String) -> Option<GameState> {
+        self.games.get(&name)
+    }
 }
 
