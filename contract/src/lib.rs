@@ -1,11 +1,11 @@
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::AccountId;
-use near_sdk::collections::UnorderedMap;
-use near_sdk::near_bindgen;
-use near_sdk::env;
+use near_sdk::{
+    borsh::{self, BorshDeserialize, BorshSerialize},
+    collections::UnorderedMap,
+    env, near_bindgen, AccountId,
+};
 
 use arrayref::array_ref;
-use battleship_core::{RoundCommit, HitType};
+use battleship_core::{HitType, RoundCommit};
 use risc0_verify::receipt::Receipt;
 use serde::{Deserialize, Serialize};
 use zkvm_core::Digest;
@@ -13,7 +13,7 @@ use zkvm_core::Digest;
 #[derive(Default, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 pub struct PlayerState {
     id: AccountId,
-    board:  [u32; 8],
+    board: [u32; 8],
     shot_x: u32,
     shot_y: u32,
 }
@@ -23,10 +23,10 @@ pub struct GameState {
     // 0 means p1 has setup game, and p2 needs to do setup
     // 1 means p1 needs to process p2's shot and make it's own
     // 2 means p2 needs to process p1's shot and make it's own
-    next_turn: u32,  
+    next_turn: u32,
     p1: PlayerState,
     p2: PlayerState,
-    last_hit: u8, // 0 = miss, 1 = hit, 2 = sunk
+    last_hit: u8,  // 0 = miss, 1 = hit, 2 = sunk
     sunk_what: u8, // Which ship was sunk
 }
 
@@ -38,7 +38,9 @@ pub struct BattleshipContract {
 
 impl Default for BattleshipContract {
     fn default() -> Self {
-        BattleshipContract { games: UnorderedMap::<String, GameState>::new(0 as u8) }
+        BattleshipContract {
+            games: UnorderedMap::<String, GameState>::new(0 as u8),
+        }
     }
 }
 
@@ -56,14 +58,26 @@ impl BattleshipContract {
         self.games.get(&name)
     }
 
+    pub fn list_games(&self) -> Vec<String> {
+        self.games.keys().collect()
+    }
+
+    pub fn delete_game(&mut self, name: String) {
+        self.games.remove(&name);
+    }
+
+    pub fn clear_games(&mut self) {
+        self.games.clear();
+    }
+
     // Set's p1's initial state
-    pub fn new_game(&mut self, name: String, receipt_str: String) {
+    pub fn new_game(&mut self, name: String, receipt_str: String) -> GameState {
         // Game must not exist
         assert!(self.games.get(&name).is_none());
         let journal = verify_receipt(&receipt_str);
         let digest = zkvm_serde::from_slice::<Digest>(&journal).unwrap();
-        self.games.insert(&name, &GameState { 
-            next_turn: 0, 
+        let state = GameState {
+            next_turn: 0,
             p1: PlayerState {
                 id: env::signer_account_id(),
                 board: *array_ref![digest.as_slice(), 0, 8],
@@ -73,11 +87,19 @@ impl BattleshipContract {
             p2: PlayerState::default(),
             last_hit: 0,
             sunk_what: 0,
-        });
+        };
+        self.games.insert(&name, &state);
+        state
     }
 
     // Set's p2's state, and makes the first shot at p1
-    pub fn join_game(&mut self, name: String, receipt_str: String, shot_x: u32, shot_y: u32) {
+    pub fn join_game(
+        &mut self,
+        name: String,
+        receipt_str: String,
+        shot_x: u32,
+        shot_y: u32,
+    ) -> GameState {
         // Get game record (panic if not there)
         let mut state = self.games.get(&name).unwrap();
         // Verify we are are on turn 0
@@ -96,17 +118,24 @@ impl BattleshipContract {
         };
         // Write back to contract
         self.games.insert(&name, &state);
+        state
     }
 
     // Do a normal turn
-    pub fn turn(&mut self, name: String, receipt_str: String, shot_x: u32, shot_y: u32) {
+    pub fn turn(
+        &mut self,
+        name: String,
+        receipt_str: String,
+        shot_x: u32,
+        shot_y: u32,
+    ) -> GameState {
         // Get game record (panic if not there)
         let mut state = self.games.get(&name).unwrap();
         // Verify we are are on turn 1 or 2
         assert!(state.next_turn >= 1);
         // Get ref to player current player (responding prior shot, making new one)
-        let (cur_player, prev_player) = if state.next_turn == 1 { 
-            (&mut state.p1, &mut state.p2) 
+        let (cur_player, prev_player) = if state.next_turn == 1 {
+            (&mut state.p1, &mut state.p2)
         } else {
             (&mut state.p2, &mut state.p1)
         };
@@ -122,9 +151,16 @@ impl BattleshipContract {
         assert!(commit.shot.y == prev_player.shot_y);
         // Set the hit status
         match commit.hit {
-            HitType::Miss => { state.last_hit = 0; },
-            HitType::Hit => { state.last_hit = 1; },
-            HitType::Sunk(ship) => { state.last_hit = 2; state.sunk_what = ship; },
+            HitType::Miss => {
+                state.last_hit = 0;
+            }
+            HitType::Hit => {
+                state.last_hit = 1;
+            }
+            HitType::Sunk(ship) => {
+                state.last_hit = 2;
+                state.sunk_what = ship;
+            }
         };
         // Update the current players state
         cur_player.board = *array_ref![commit.new_state.as_slice(), 0, 8];
@@ -135,10 +171,6 @@ impl BattleshipContract {
         state.next_turn = 3 - state.next_turn;
         // Write back to contract
         self.games.insert(&name, &state);
-    }
-
-    pub fn get_game_state(&self, name: String) -> Option<GameState> {
-        self.games.get(&name)
+        state
     }
 }
-
