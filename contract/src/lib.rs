@@ -1,14 +1,15 @@
+use arrayref::array_ref;
 use near_sdk::{
     borsh::{self, BorshDeserialize, BorshSerialize},
     collections::UnorderedMap,
     env, near_bindgen, AccountId,
 };
-
-use arrayref::array_ref;
-use battleship_core::{HitType, RoundCommit};
-use risc0_verify::receipt::Receipt;
 use serde::{Deserialize, Serialize};
-use zkvm_core::Digest;
+
+use risc0_zkvm_core::Digest;
+use risc0_zkvm_verify::Receipt;
+
+use battleship_core::{HitType, RoundCommit};
 
 #[derive(Default, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 pub struct PlayerState {
@@ -75,7 +76,7 @@ impl BattleshipContract {
         // Game must not exist
         assert!(self.games.get(&name).is_none());
         let journal = verify_receipt(&receipt_str);
-        let digest = zkvm_serde::from_slice::<Digest>(&journal).unwrap();
+        let digest = risc0_zkvm_serde::from_slice::<Digest>(&journal).unwrap();
         let state = GameState {
             next_turn: 0,
             p1: PlayerState {
@@ -108,7 +109,7 @@ impl BattleshipContract {
         state.next_turn = 1;
         // Verify the player has a valid initial state
         let journal = verify_receipt(&receipt_str);
-        let digest = zkvm_serde::from_slice::<Digest>(&journal).unwrap();
+        let digest = risc0_zkvm_serde::from_slice::<Digest>(&journal).unwrap();
         // Update player 2 starting state + set shot
         state.p2 = PlayerState {
             id: env::signer_account_id(),
@@ -143,7 +144,7 @@ impl BattleshipContract {
         assert!(cur_player.id == env::signer_account_id());
         // Verify the proof and extract as a RoundCommit
         let journal = verify_receipt(&receipt_str);
-        let commit = zkvm_serde::from_slice::<RoundCommit>(&journal).unwrap();
+        let commit = risc0_zkvm_serde::from_slice::<RoundCommit>(&journal).unwrap();
         // Make sure the prior state matches the current state
         assert!(cur_player.board.as_slice() == commit.old_state.as_slice());
         // Make sure the response matches the prior shot

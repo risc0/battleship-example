@@ -1,27 +1,58 @@
-A demo of battleship using Risc Zero
+# Battleship (Rust)
 
-* risc0 - The submodule for the main repo
-* risc0-verify - The submodule for the rust verifier
-* contract - The rust code for the smart contract
-* service - The prover service (to be written)
-* client - The web UI (cmd-line node code for now)
+'Battleship' is a 2-player hidden information game implemented.
 
-Instructions:
+Players produce proofs of game-state and the result of their actions to enable
+two players to play fairly with no intermediaries.
 
-  // In window 1: Run the web server
-  cd risc0
-  bazelisk run //examples/rust/battleship/web  
+## Components
 
-  // In window 2: Build + deploy the contract
-  cd contract
-  cargo build --target wasm32-unknown-unknown --release
-  dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
+* Web UI (client)
+* Prover web service
+* NEAR smart contract
 
-  // In window 3: Run JS glue logic
-  cd client
-  npm install
-  // Edit all the constants in main.js for contract + near user
-  // Run a game init
-  node main.js
+## Requirements
 
+### Yew
 
+Follow the instructions for [Yew Project Setup](https://yew.rs/docs/getting-started/introduction).
+
+### NEAR
+
+Install the `near-cli`:
+```
+npm install -g near-cli
+```
+
+Create a NEAR account: https://wallet.testnet.near.org/create
+
+## Running
+
+Deploy the NEAR smart contract (optional):
+```
+cd contract
+cargo build --target wasm32-unknown-unknown --release
+near dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
+```
+
+NOTE: If you deploy your own smart contract, you'll need to update the code to point to this new contract.
+
+See: https://github.com/risc0/risc0/blob/main/examples/rust/battleship/web/client/near.js#L16
+
+Launch the web service:
+```
+bazelisk run //examples/rust/battleship/web/server
+```
+
+Launch the web client:
+```
+cd web/client
+trunk serve --open -- web/client/index.html
+```
+
+## Unit tests
+
+```
+RISC0_LOG=1 bazelisk run //examples/rust/battleship:test
+cargo test
+```

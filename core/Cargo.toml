@@ -1,0 +1,9 @@
+[package]
+name = "battleship-core"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[dependencies]
+risc0-zkvm-core = "0.1"
+serde = "1.0"
