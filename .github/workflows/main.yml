@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  cargo:
+    runs-on: [self-hosted, "${{ matrix.os }}"]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [Linux, macOS, Windows]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo test
+      - run: cargo build --release --manifest-path contract/Cargo.toml

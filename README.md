@@ -1,6 +1,7 @@
 # Battleship (Rust)
+*This README includes instructions to install and play RISC Zero Battleship on your own machine. For more information about RISC Zero Battleship, check out the tutorials at [www.risczero.com](https://www.risczero.com). For questions, find us on [Discord](https://discord.gg/risczero).*
 
-'Battleship' is a 2-player hidden information game implemented.
+`RISC Zero Battleship` is a 2-player hidden information game implemented in Rust on the NEAR Network.
 
 Players produce proofs of game-state and the result of their actions to enable
 two players to play fairly with no intermediaries.
@@ -31,7 +32,7 @@ Create a NEAR account: https://wallet.testnet.near.org/create
 Deploy the NEAR smart contract (optional):
 ```
 cd contract
-cargo build --target wasm32-unknown-unknown --release
+cargo build --release
 near dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
 ```
 
@@ -41,18 +42,17 @@ See: https://github.com/risc0/risc0/blob/main/examples/rust/battleship/web/clien
 
 Launch the web service:
 ```
-bazelisk run //examples/rust/battleship/web/server
+cargo run --bin battleship-web-server --release
 ```
 
 Launch the web client:
 ```
 cd web/client
-trunk serve --open -- web/client/index.html
+trunk serve --open
 ```
 
 ## Unit tests
 
 ```
-RISC0_LOG=1 bazelisk run //examples/rust/battleship:test
 cargo test
 ```

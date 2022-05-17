@@ -12,19 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![no_main]
 #![no_std]
 
-use risc0_zkvm_guest::{env, sha};
-
-use battleship_core::GameState;
-
-risc0_zkvm_guest::entry!(main);
-
-pub fn main() {
-    let state: GameState = env::read();
-    if !state.check() {
-        panic!("Invalid GameState");
-    }
-    env::commit(&sha::digest(state));
+#[cfg(not(target_arch = "riscv32"))]
+pub mod methods {
+    include!(concat!(env!("OUT_DIR"), "/methods.rs"));
 }

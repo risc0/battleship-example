@@ -1,11 +1,30 @@
-use std::net::SocketAddr;
+// Copyright 2022 Risc0, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+use std::{
+    fs,
+    net::{Ipv4Addr, SocketAddr},
+};
 
 use axum::{http::StatusCode, response::IntoResponse, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
+use tempfile::tempdir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::*;
 
 use battleship_core::{GameState, RoundParams, RoundResult};
+use battleship_methods::methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
 use risc0_zkvm_host::Prover;
 
 #[derive(Deserialize, Serialize)]
@@ -25,7 +44,7 @@ async fn main() {
     tracing_subscriber::registry()
         // Filter spans based on the RUST_LOG env var.
         .with(tracing_subscriber::EnvFilter::new(
-            "server,tower_http=debug",
+            "info,server,tower_http=debug",
         ))
         // Send a copy of all spans to stdout as JSON.
         .with(
@@ -43,7 +62,7 @@ async fn main() {
         .route("/prove/turn", post(prove_turn))
         .layer(TraceLayer::new_for_http());
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, 3000));
     tracing::info!("listening on {}", addr);
     let server = axum::Server::bind(&addr).serve(app.into_make_service());
 
@@ -51,7 +70,16 @@ async fn main() {
 }
 
 fn do_init_proof(name: &str, input: GameState) -> Result<String, risc0_zkvm_host::Exception> {
-    let mut prover = Prover::new(name)?;
+    let temp_dir = tempdir().unwrap();
+    let id_path = temp_dir
+        .path()
+        .join("init.id")
+        .to_str()
+        .unwrap()
+        .to_string();
+    fs::write(&id_path, INIT_ID).unwrap();
+
+    let mut prover = Prover::new(name, &id_path)?;
     let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
     prover.add_input(vec.as_slice())?;
     let receipt = prover.run()?;
@@ -63,7 +91,16 @@ fn do_init_proof(name: &str, input: GameState) -> Result<String, risc0_zkvm_host
 }
 
 fn do_turn_proof(name: &str, input: RoundParams) -> Result<TurnResult, risc0_zkvm_host::Exception> {
-    let mut prover = Prover::new(name)?;
+    let temp_dir = tempdir().unwrap();
+    let id_path = temp_dir
+        .path()
+        .join("turn.id")
+        .to_str()
+        .unwrap()
+        .to_string();
+    fs::write(&id_path, TURN_ID).unwrap();
+
+    let mut prover = Prover::new(name, &id_path)?;
     let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
     prover.add_input(vec.as_slice())?;
     let receipt = prover.run()?;
@@ -80,7 +117,7 @@ fn do_turn_proof(name: &str, input: RoundParams) -> Result<TurnResult, risc0_zkv
 }
 
 async fn prove_init(Json(payload): Json<GameState>) -> impl IntoResponse {
-    let out = match do_init_proof("examples/rust/battleship/core/init", payload) {
+    let out = match do_init_proof(INIT_PATH, payload) {
         Ok(receipt) => receipt,
         Err(_e) => {
             return (
@@ -93,7 +130,7 @@ async fn prove_init(Json(payload): Json<GameState>) -> impl IntoResponse {
 }
 
 async fn prove_turn(Json(payload): Json<RoundParams>) -> impl IntoResponse {
-    let out = match do_turn_proof("examples/rust/battleship/core/turn", payload) {
+    let out = match do_turn_proof(TURN_PATH, payload) {
         Ok(receipt) => receipt,
         Err(_e) => {
             return (

@@ -149,7 +149,7 @@ impl RoundParams {
                     }
                 }
                 ShipDirection::Vertical => {
-                    if shot.x == x && shot.y >= y && shot.y <= y + span {
+                    if shot.x != x && shot.y >= y && shot.y <= y + span {
                         HitShift::Hit(shot.y - y)
                     } else {
                         HitShift::Miss

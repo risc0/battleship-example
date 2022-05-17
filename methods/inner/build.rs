@@ -12,23 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![no_main]
-#![no_std]
-
-use risc0_zkvm_guest::{env, sha};
-
-use battleship_core::{RoundCommit, RoundParams};
-
-risc0_zkvm_guest::entry!(main);
-
-pub fn main() {
-    let params: RoundParams = env::read();
-    let result = params.process();
-    env::write(&result);
-    env::commit(&RoundCommit {
-        old_state: *sha::digest(params.state),
-        new_state: *sha::digest(result.state),
-        shot: params.shot,
-        hit: result.hit,
-    });
+fn main() {
+    risc0_build::link();
 }
