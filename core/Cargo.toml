@@ -2,8 +2,16 @@
 name = "battleship-core"
 version = "0.1.0"
 edition = "2021"
-autobins = false
 
 [dependencies]
-risc0-zkvm-core = "0.1"
-serde = "1.0"
+risc0-zkvm-core = { version = "0.7.0-dev.1", default-features = false, features = ["pure"] }
+serde = { version = "1.0", default-features = false }
+
+[dev-dependencies]
+battleship-methods = { path = "../methods" }
+ctor = "0.1"
+env_logger = "0.8"
+log = "0.4"
+risc0-zkvm-host = "0.7.0-dev.1"
+risc0-zkvm-serde = "0.7.0-dev.1"
+tempfile = "3.3"
