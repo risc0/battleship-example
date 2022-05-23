@@ -31,6 +31,7 @@ Create a NEAR account: https://wallet.testnet.near.org/create
 
 Deploy the NEAR smart contract (optional):
 ```
+cargo run --bin risc0-build-methods
 cd contract
 cargo build --release
 near dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
@@ -38,15 +39,17 @@ near dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
 
 NOTE: If you deploy your own smart contract, you'll need to update the code to point to this new contract.
 
-See: https://github.com/risc0/risc0/blob/main/examples/rust/battleship/web/client/near.js#L16
+See: https://github.com/risc0/battleship-example/blob/main/web/client/near.js#L16
 
 Launch the web service:
 ```
+cargo run --bin risc0-build-methods
 cargo run --bin battleship-web-server --release
 ```
 
 Launch the web client:
 ```
+cargo run --bin risc0-build-methods
 cd web/client
 trunk serve --open
 ```
@@ -54,5 +57,6 @@ trunk serve --open
 ## Unit tests
 
 ```
+cargo run --bin risc0-build-methods
 cargo test
 ```

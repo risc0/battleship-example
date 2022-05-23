@@ -24,7 +24,7 @@ use risc0_zkvm_core::Digest;
 use risc0_zkvm_verify::zkvm::{MethodID, Receipt};
 
 use battleship_core::{HitType, RoundCommit};
-use battleship_methods::methods::{INIT_ID, TURN_ID};
+use battleship_methods::{INIT_ID, TURN_ID};
 
 #[derive(Default, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 pub struct PlayerState {

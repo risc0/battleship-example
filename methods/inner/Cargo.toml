@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "battleship-methods-inner"
 version = "0.1.0"
