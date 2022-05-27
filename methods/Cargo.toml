@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [package.metadata.risc0]
-methods = ["inner"]
+methods = ["guest"]
 
 [profile.release]
 lto = true
 opt-level = "z"
 
 [build-dependencies]
-risc0-build = "0.7.0-dev.1"
+risc0-build = "0.7"
