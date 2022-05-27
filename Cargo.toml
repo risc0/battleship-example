@@ -1,13 +1,14 @@
 [workspace]
 members = [
   "core",
+  "methods",
+  "risc0-build-methods",
   "web/client",
   "web/server",
 ]
 
 exclude = [
   "contract",
-  "methods",
 ]
 
 # [patch.crates-io]

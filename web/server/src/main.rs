@@ -24,7 +24,7 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::*;
 
 use battleship_core::{GameState, RoundParams, RoundResult};
-use battleship_methods::methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
+use battleship_methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
 use risc0_zkvm_host::Prover;
 
 #[derive(Deserialize, Serialize)]

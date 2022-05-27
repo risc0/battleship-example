@@ -17,7 +17,7 @@ use std::fs;
 use battleship_core::{
     GameState, HitType, Position, RoundCommit, RoundParams, RoundResult, Ship, ShipDirection,
 };
-use battleship_methods::methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
+use battleship_methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
 use log::LevelFilter;
 use risc0_zkvm_core::Digest;
 use risc0_zkvm_host::{Exception, Prover, Receipt, Result};

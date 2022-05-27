@@ -3,6 +3,9 @@ name = "battleship-methods"
 version = "0.1.0"
 edition = "2021"
 
+[package.metadata.risc0]
+methods = ["inner"]
+
 [profile.release]
 lto = true
 opt-level = "z"
