@@ -33,6 +33,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
 
 [[package]]
+name = "array-init"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6945cc5422176fc5e602e590c2878d2c2acd9a4fe20a4baa7c28022521698ec6"
+
+[[package]]
 name = "async-trait"
 version = "0.1.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -137,6 +143,7 @@ dependencies = [
 name = "battleship-web-client"
 version = "0.1.0"
 dependencies = [
+ "array-init",
  "async-trait",
  "battleship-core",
  "getrandom",
@@ -759,9 +766,9 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
-version = "0.14.18"
+version = "0.14.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b26ae0a80afebe130861d90abf98e3814a4f28a4c6ffeb5ab8ebb2be311e0ef2"
+checksum = "42dc3c131584288d375f2d07f822b0cb012d8c6fb899a5b9fdb3cb7eb9b6004f"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1118,9 +1125,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-build"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "472a3c4311dd328e29cc4f2b30010781d44a8c3ca3293d4973c33a6c8050c121"
+checksum = "ae0f11c8270173f25d47a8e12a8546487b207b01400bf6b41ebbb124691d3c77"
 dependencies = [
  "cargo_metadata",
  "risc0-zkvm-platform-sys",
@@ -1138,9 +1145,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-core-sys"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c280401617faa2475931fc0abce223a04076e72de84e7b2ceb37ffcbd6643ec"
+checksum = "2954d1dad9f0a5a890dd80543c857b7ebdf9588e68c624502963905d60d5d4fe"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -1148,9 +1155,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkp-core"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "697802cc30add1cf9a8c8e85040bdc3e512f43be67857e6db3205d623f1004a6"
+checksum = "cdb17c0b3e46ecb92def57096d63ce7e2f0631427cc7dee022bdb74aa75d7292"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -1162,9 +1169,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkp-sys"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "611f073a2fae5083e97da974979e0bf5e5a5bbfe7d2e0773368b579c4096f742"
+checksum = "c44b86faf3d800f2740c06e82ee854084096836c947b09bcc8803bcae7640080"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -1174,18 +1181,18 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-circuit-gen"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae941a19f9a1a1e363ba5e8840ba5be5567cbbca9fb2ef0c2dcae69abafb77d5"
+checksum = "1692d6e93a0f727f6773b09fe8b83c80289275190950f0fc1f6649f137f06eef"
 dependencies = [
  "risc0-zkvm-circuit-sys",
 ]
 
 [[package]]
 name = "risc0-zkvm-circuit-sys"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c1d087844023f6797035619e6a23ad290e07919d7a63c6708a098418ace8fc8"
+checksum = "beefe9fd047e5461a7da44fce7a1c48e2458e5d3589b3ac9921cec012487507c"
 dependencies = [
  "anyhow",
  "cxx",
@@ -1196,9 +1203,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-core"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97024884a13cb079ca017f6405e2d85dbb5ecd55d388e1189bcadbffce2b5085"
+checksum = "178aeadbe1b4aaa052d9db1b2cc7cbe9cf2b2f9f78be83080d6bc40d26ea3785"
 dependencies = [
  "cfg-if",
  "risc0-zkp-core",
@@ -1207,9 +1214,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-host"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1bc372afd8ee52a1a581ff8ef2aa10b6dbef16dcbace3ee26e59190e62206ed"
+checksum = "284ba8ddf23115235c6234d153afa792456fcb15860a04bc99047f965fd7ff21"
 dependencies = [
  "ctor",
  "cxx",
@@ -1220,9 +1227,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-platform-sys"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ded716cc4af9e852e929f06696e54fe20fca66ea7ed12eca528aedeadae1cdc7"
+checksum = "038e70fa1742aecc206259aa551e2d66c688ce1b3683690a7b7147ab1d13af52"
 dependencies = [
  "cxx",
  "cxx-build",
@@ -1230,9 +1237,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-serde"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39f60b8d6f8b36eaf65f8ee83f888d12d06daec9f5b1f453e53343a04d146271"
+checksum = "4958cf8f5900bd41a1490f24bb50054d0c16106886d3e6c4266ffb2898f88852"
 dependencies = [
  "bytemuck",
  "serde",
@@ -1240,9 +1247,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-sys"
-version = "0.7.0-rc.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20aee1c749f7e9666337b1e057525b01a630aee56f3c9930ec67ea8ca115553d"
+checksum = "3a95df92ee787f0c98eca866fe8bd0f0ea77faf5d37cba256007af33dddc8117"
 dependencies = [
  "anyhow",
  "cxx",
@@ -1429,13 +1436,11 @@ checksum = "20518fe4a4c9acf048008599e464deb21beeae3d3578418951a189c235a7a9a8"
 
 [[package]]
 name = "tbb-sys"
-version = "1.0.0+2021.5.0"
+version = "1.1.0+2021.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "beeab21f005320d0c0654165ddd75eeb75fabed9341b3863e06488f35a2f10b3"
+checksum = "be3fe1690d40f14fcc2bf483f3615e89b9c39d342aeb4a1bd94058aef0a2d8ee"
 dependencies = [
  "cc",
- "cxx",
- "cxx-build",
  "glob",
 ]
 

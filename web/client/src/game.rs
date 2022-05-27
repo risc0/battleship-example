@@ -14,7 +14,8 @@
 
 use std::{collections::HashMap, rc::Rc};
 
-use gloo::timers::future::TimeoutFuture;
+use gloo::{dialogs::alert, timers::future::TimeoutFuture};
+use rand::{thread_rng, Rng};
 use reqwasm::http::Request;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
@@ -26,7 +27,10 @@ use crate::{
     near::NearContract,
     wallet::WalletContext,
 };
-use battleship_core::{GameState, Position, RoundParams, RoundResult, Ship, ShipDirection};
+use battleship_core::{
+    GameCheck, GameState, Position, RoundParams, RoundResult, Ship, ShipDirection, BOARD_SIZE,
+    SHIP_SPANS,
+};
 
 pub type CoreHitType = battleship_core::HitType;
 
@@ -73,10 +77,52 @@ pub struct GameSession {
     pub status: String,
 }
 
+fn create_random_ships() -> [Ship; 5] {
+    // randomly place 5 ships on the board
+    let mut rng = thread_rng();
+    let mut game_check = GameCheck::new();
+
+    let ships: [Ship; 5] = array_init::array_init(|i| {
+        loop {
+            // pick a random starting point on the board
+            let x = rng.gen_range(0..BOARD_SIZE - 1);
+            let y = rng.gen_range(0..BOARD_SIZE - 1);
+
+            // pick between 0 and 1 for randomized ship placement
+            let dir = if rng.gen::<bool>() {
+                ShipDirection::Horizontal
+            } else {
+                ShipDirection::Vertical
+            };
+
+            let ship = Ship::new(x as u32, y as u32, dir);
+
+            // does it fit on the board
+            let span = SHIP_SPANS[i];
+            if !ship.check(span) {
+                continue;
+            }
+
+            // does it cross any other ship
+            if !game_check.check(&ship, span, false) {
+                continue;
+            }
+
+            // mark the ship as taken
+            game_check.commit(&ship, span);
+
+            return ship;
+        }
+    });
+    ships
+}
+
 #[derive(Properties, PartialEq)]
 pub struct Props {
     pub name: String,
     pub until: usize,
+    #[prop_or_else(create_random_ships)]
+    pub ships: [Ship; 5],
     #[prop_or_default]
     pub children: Children,
 }
@@ -97,18 +143,12 @@ impl Component for GameProvider {
             .context::<WalletContext>(Callback::noop())
             .unwrap();
         let state = GameState {
-            ships: [
-                Ship::new(2, 3, ShipDirection::Vertical),
-                Ship::new(3, 1, ShipDirection::Horizontal),
-                Ship::new(4, 7, ShipDirection::Vertical),
-                Ship::new(7, 5, ShipDirection::Horizontal),
-                Ship::new(7, 7, ShipDirection::Horizontal),
-            ],
+            ships: ctx.props().ships.clone(),
             salt: 0xDEADBEEF,
         };
         let game = GameSession {
-            state,
             name: ctx.props().name.clone(),
+            state,
             contract: wallet.contract.clone(),
             local_shots: HashMap::new(),
             remote_shots: HashMap::new(),
@@ -243,6 +283,7 @@ impl Component for GameProvider {
                             0 => HitType::Core(CoreHitType::Miss),
                             1 => HitType::Core(CoreHitType::Hit),
                             2 => {
+                                alert("You sunk an opponent's ship!");
                                 HitType::Core(CoreHitType::Sunk(contract_state.sunk_what.unwrap()))
                             }
                             _ => unreachable!(),
