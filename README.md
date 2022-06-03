@@ -29,7 +29,9 @@ Create a NEAR account: https://wallet.testnet.near.org/create
 
 ## Running
 
-Deploy the NEAR smart contract (optional):
+Deploy the NEAR smart contract (currently this is required due to
+https://github.com/risc0/risc0/issues/116)
+
 ```
 cargo run --bin risc0-build-methods
 cd contract
@@ -60,3 +62,10 @@ trunk serve --open
 cargo run --bin risc0-build-methods
 cargo test
 ```
+
+## Known issues
+
+- Every build of the guest code requires a new contract deployment
+- There's an issue with the near javascript API that prevents adjusting the
+  contract allowance during sign in or when the game starts.  This limits each
+  game to only a few moves regardless of how much NEAR the account had.
