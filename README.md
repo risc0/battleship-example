@@ -29,7 +29,7 @@ Create a NEAR account: https://wallet.testnet.near.org/create
 
 ## Running
 
-Deploy the NEAR smart contract:
+Deploy the NEAR smart contract (optional -- unless this is your first time installing, then required):
 ```
 cargo run --bin risc0-build-methods
 cd contract
