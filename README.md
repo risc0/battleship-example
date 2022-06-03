@@ -65,7 +65,7 @@ cargo test
 
 ## Known issues
 
-- Every build of the guest code requires a new contract deployment
+- Every build of the guest code requires a new contract deployment. See: risc0/risc0#116.
 - There's an issue with the near javascript API that prevents adjusting the
   contract allowance during sign in or when the game starts.  This limits each
   game to only a few moves regardless of how much NEAR the account had.
