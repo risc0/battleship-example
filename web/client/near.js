@@ -13,20 +13,17 @@
 // limitations under the License.
 
 const GAS = "300000000000000";
-const CONTRACT_ID = 'dev-put_your_id_here'
-const NETWORK_ID = 'testnet';
+const CONTRACT_ID = "dev-put_your_id_here";
+const NETWORK_ID = "testnet";
 
-const VIEW_METHODS = [
-  'game_state',
-  'list_games',
-];
+const VIEW_METHODS = ["game_state", "list_games"];
 
 const CHANGE_METHODS = [
-  'new_game',
-  'join_game',
-  'turn',
-  'clear_games',
-  'delete_game',
+  "new_game",
+  "join_game",
+  "turn",
+  "clear_games",
+  "delete_game",
 ];
 
 const ALL_METHODS = VIEW_METHODS.concat(CHANGE_METHODS);
@@ -39,8 +36,8 @@ export class NearWallet {
     const near = new nearApi.Near({
       NETWORK_ID,
       keyStore: new nearApi.keyStores.BrowserLocalStorageKeyStore(),
-      nodeUrl: 'https://rpc.testnet.near.org',
-      walletUrl: 'https://wallet.testnet.near.org',
+      nodeUrl: "https://rpc.testnet.near.org",
+      walletUrl: "https://wallet.testnet.near.org",
     });
 
     // connect to the NEAR Wallet
