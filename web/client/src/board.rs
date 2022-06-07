@@ -191,7 +191,6 @@ impl Component for Board {
             Msg::Shot(pos) => match ctx.props().side {
                 Side::Local => false,
                 Side::Remote => {
-                    self.grid.cells[pos.y as usize][pos.x as usize].fg = Foreground::Pending;
                     self.game_agent.send(GameMsg::Shot(pos));
                     true
                 }
