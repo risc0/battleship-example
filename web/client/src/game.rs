@@ -14,11 +14,13 @@
 
 use std::{collections::HashMap, rc::Rc};
 
-use gloo::{dialogs::alert, timers::future::TimeoutFuture, storage::LocalStorage, storage::Storage};
-use serde_with::serde_as;
+use gloo::{
+    dialogs::alert, storage::LocalStorage, storage::Storage, timers::future::TimeoutFuture,
+};
 use rand::{thread_rng, Rng};
 use reqwasm::http::Request;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use yew::prelude::*;
 use yew_agent::{Bridge, Bridged, Dispatched, Dispatcher};
 
@@ -157,22 +159,25 @@ impl Component for GameProvider {
 
         // if we have a game session, set game equal to it or create a new game session
         let (game_session_exists, game) = match res {
-            Ok(game) => (true,game),
-            Err(_) => (false, GameSession {
-                name: ctx.props().name.clone(),
-                state: GameState {
-                    ships: ctx.props().ships.clone(),
-                    salt: 0xDEADBEEF,
+            Ok(game) => (true, game),
+            Err(_) => (
+                false,
+                GameSession {
+                    name: ctx.props().name.clone(),
+                    state: GameState {
+                        ships: ctx.props().ships.clone(),
+                        salt: 0xDEADBEEF,
+                    },
+                    local_shots: HashMap::new(),
+                    remote_shots: HashMap::new(),
+                    last_receipt: String::new(),
+                    last_shot: None,
+                    is_first: ctx.props().until == 2,
+                    status: format!("Ready!"),
+                    og_until: ctx.props().until,
+                    turn_processed: false,
                 },
-                local_shots: HashMap::new(),
-                remote_shots: HashMap::new(),
-                last_receipt: String::new(),
-                last_shot: None,
-                is_first: ctx.props().until == 2,
-                status: format!("Ready!"),
-                og_until: ctx.props().until,
-                turn_processed: false,
-            })
+            ),
         };
 
         // if a game session exists, check who's turn it is and resume the game
@@ -184,7 +189,7 @@ impl Component for GameProvider {
             if ctx.props().until == 1 {
                 log::info!("Game session does not exist, initializing game");
                 ctx.link().send_message(GameMsg::Init);
-            }  
+            }
         }
 
         let contract = wallet.contract.clone();
@@ -261,9 +266,7 @@ impl Component for GameProvider {
                                     return GameMsg::Error(format!("receipt: {}", err));
                                 }
                             };
-                            match contract.join_game(&game.name, &receipt, pos.x, pos.y)
-                                .await
-                            {
+                            match contract.join_game(&game.name, &receipt, pos.x, pos.y).await {
                                 Ok(()) => {
                                     log::info!("Game joined save and wait turn {}", game.name);
                                     GameMsg::SaveAndWait
@@ -273,11 +276,12 @@ impl Component for GameProvider {
                                 }
                             }
                         } else {
-                            match contract.turn(&game.name, &game.last_receipt, pos.x, pos.y)
+                            match contract
+                                .turn(&game.name, &game.last_receipt, pos.x, pos.y)
                                 .await
                             {
                                 Ok(()) => {
-                                    log::info!("Turn sent save and and wait turn {}", game.name);
+                                    log::info!("Turn sent save and wait turn {}", game.name);
                                     GameMsg::SaveAndWait
                                 }
                                 Err(err) => {
@@ -370,7 +374,7 @@ impl Component for GameProvider {
                 true
             }
             GameMsg::CheckTurn => {
-                let until = self.game.og_until as u32; //ctx.props().until as u32;
+                let until = self.game.og_until as u32;
                 let game = self.game.clone();
                 let contract = self.contract.clone();
                 let turn_processed = self.game.turn_processed;
@@ -378,12 +382,13 @@ impl Component for GameProvider {
                     let contract_state = match contract.get_state(&game.name).await {
                         Ok(state) => state,
                         Err(err) => {
-                            return GameMsg::Error(format!("checkturn get_state: {:?}", err));
+                            return GameMsg::Error(format!("CheckTurn get_state: {:?}", err));
                         }
                     };
                     if contract_state.next_turn == until {
                         // process the turn if it was not processed yet
-                        if !turn_processed { GameMsg::ProcessTurn(contract_state) 
+                        if !turn_processed {
+                            GameMsg::ProcessTurn(contract_state)
                         } else {
                             GameMsg::Resume
                         }
