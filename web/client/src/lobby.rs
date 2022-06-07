@@ -14,6 +14,7 @@
 
 use std::rc::Rc;
 
+use gloo::storage::{LocalStorage, Storage};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_agent::{Dispatched, Dispatcher};
@@ -21,15 +22,11 @@ use yew_router::{components::Link, history::History, prelude::RouterScopeExt};
 
 use crate::{bus::EventBus, contract::Contract, near::NearContract, wallet::WalletContext, Route};
 
-use gloo::storage::{LocalStorage, Storage};
-
 pub struct Lobby {
     journal: Dispatcher<EventBus<String>>,
     contract: Rc<NearContract>,
     games: Vec<String>,
 }
-
-
 
 #[derive(Clone)]
 pub enum Msg {
