@@ -1,3 +1,4 @@
+/.cargo
 contract/neardev/
 dist/
 target/
