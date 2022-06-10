@@ -2,7 +2,6 @@
 members = [
   "core",
   "methods",
-  "risc0-build-methods",
   "web/client",
   "web/server",
 ]
@@ -10,10 +9,3 @@ members = [
 exclude = [
   "contract",
 ]
-
-# [patch.crates-io]
-# risc0-build = { path = "../risc0/risc0/build" }
-# risc0-zkvm-circuit-gen = { path = "../risc0/risc0/zkvm/circuit/make-circuit" }
-# risc0-zkvm-core = { path = "../risc0/risc0/zkvm/sdk/rust/core" }
-# risc0-zkvm-host = { path = "../risc0/risc0/zkvm/sdk/rust/host" }
-# risc0-zkvm-serde = { path = "../risc0/risc0/zkvm/sdk/rust/serde" }

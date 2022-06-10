@@ -29,11 +29,9 @@ Create a NEAR account: https://wallet.testnet.near.org/create
 
 ## Running
 
-Deploy the NEAR smart contract (currently this is required due to
-https://github.com/risc0/risc0/issues/116)
+Deploy the NEAR smart contract (optional)
 
 ```
-cargo run --bin risc0-build-methods
 cd contract
 cargo build --release
 near dev-deploy target/wasm32-unknown-unknown/release/battleship_contract.wasm
@@ -45,13 +43,11 @@ See: https://github.com/risc0/battleship-example/blob/main/web/client/near.js#L1
 
 Launch the web service:
 ```
-cargo run --bin risc0-build-methods
 cargo run --bin battleship-web-server --release
 ```
 
 Launch the web client:
 ```
-cargo run --bin risc0-build-methods
 cd web/client
 trunk serve --open
 ```
@@ -59,13 +55,11 @@ trunk serve --open
 ## Unit tests
 
 ```
-cargo run --bin risc0-build-methods
 cargo test
 ```
 
 ## Known issues
 
-- Every build of the guest code requires a new contract deployment. See: risc0/risc0#116.
 - There's an issue with the near javascript API that prevents adjusting the
   contract allowance during sign in or when the game starts.  This limits each
   game to only a few moves regardless of how much NEAR the account had.
