@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{
-    fs,
-    net::{Ipv4Addr, SocketAddr},
-};
+use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{http::StatusCode, response::IntoResponse, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
-use tempfile::tempdir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::*;
 
@@ -70,16 +66,7 @@ async fn main() {
 }
 
 fn do_init_proof(name: &str, input: GameState) -> Result<String, risc0_zkvm_host::Exception> {
-    let temp_dir = tempdir().unwrap();
-    let id_path = temp_dir
-        .path()
-        .join("init.id")
-        .to_str()
-        .unwrap()
-        .to_string();
-    fs::write(&id_path, INIT_ID).unwrap();
-
-    let mut prover = Prover::new(name, &id_path)?;
+    let mut prover = Prover::new(name, INIT_ID)?;
     let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
     prover.add_input(vec.as_slice())?;
     let receipt = prover.run()?;
@@ -91,16 +78,7 @@ fn do_init_proof(name: &str, input: GameState) -> Result<String, risc0_zkvm_host
 }
 
 fn do_turn_proof(name: &str, input: RoundParams) -> Result<TurnResult, risc0_zkvm_host::Exception> {
-    let temp_dir = tempdir().unwrap();
-    let id_path = temp_dir
-        .path()
-        .join("turn.id")
-        .to_str()
-        .unwrap()
-        .to_string();
-    fs::write(&id_path, TURN_ID).unwrap();
-
-    let mut prover = Prover::new(name, &id_path)?;
+    let mut prover = Prover::new(name, TURN_ID)?;
     let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
     prover.add_input(vec.as_slice())?;
     let receipt = prover.run()?;
