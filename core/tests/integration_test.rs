@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fs;
-
 use battleship_core::{
     GameState, HitType, Position, RoundCommit, RoundParams, RoundResult, Ship, ShipDirection,
 };
@@ -22,7 +20,6 @@ use log::LevelFilter;
 use risc0_zkvm_core::Digest;
 use risc0_zkvm_host::{Exception, Prover, Receipt, Result};
 use risc0_zkvm_serde::{from_slice, to_slice, to_vec};
-use tempfile::tempdir;
 
 pub struct InitMessage {
     receipt: Receipt,
@@ -68,16 +65,7 @@ impl Battleship {
     }
 
     pub fn init(&self) -> Result<InitMessage> {
-        let temp_dir = tempdir().unwrap();
-        let init_id = temp_dir
-            .path()
-            .join("init.id")
-            .to_str()
-            .unwrap()
-            .to_string();
-        fs::write(&init_id, INIT_ID).unwrap();
-
-        let mut prover = Prover::new(INIT_PATH, &init_id)?;
+        let mut prover = Prover::new(INIT_PATH, INIT_ID)?;
         let vec = to_vec(&self.state).unwrap();
         prover.add_input(vec.as_slice())?;
         let receipt = prover.run()?;
@@ -86,17 +74,7 @@ impl Battleship {
 
     pub fn on_init_msg(&mut self, msg: &InitMessage) -> Result<()> {
         log::info!("on_init_msg");
-
-        let temp_dir = tempdir().unwrap();
-        let init_id = temp_dir
-            .path()
-            .join("init.id")
-            .to_str()
-            .unwrap()
-            .to_string();
-        fs::write(&init_id, INIT_ID).unwrap();
-
-        msg.receipt.verify(&init_id)?;
+        msg.receipt.verify(INIT_ID)?;
         self.peer_state = msg.get_state()?;
         log::info!("  peer_state: {:?}", self.peer_state);
         Ok(())
@@ -113,16 +91,7 @@ impl Battleship {
         log::info!("on_turn_msg: {:?}", msg);
         let params = RoundParams::new(self.state.clone(), msg.shot.x, msg.shot.y);
 
-        let temp_dir = tempdir().unwrap();
-        let turn_id = temp_dir
-            .path()
-            .join("turn.id")
-            .to_str()
-            .unwrap()
-            .to_string();
-        fs::write(&turn_id, TURN_ID).unwrap();
-
-        let mut prover = Prover::new(TURN_PATH, &turn_id)?;
+        let mut prover = Prover::new(TURN_PATH, TURN_ID)?;
         let vec = to_vec(&params).unwrap();
         prover.add_input(vec.as_slice())?;
         let receipt = prover.run()?;
@@ -134,17 +103,7 @@ impl Battleship {
 
     pub fn on_round_msg(&mut self, msg: &RoundMessage) -> Result<HitType> {
         log::info!("on_round_msg");
-
-        let temp_dir = tempdir().unwrap();
-        let turn_id = temp_dir
-            .path()
-            .join("turn.id")
-            .to_str()
-            .unwrap()
-            .to_string();
-        fs::write(&turn_id, TURN_ID).unwrap();
-
-        msg.receipt.verify(&turn_id)?;
+        msg.receipt.verify(TURN_ID)?;
         let commit = msg.get_commit()?;
         log::info!("  commit: {:?}", commit);
 
