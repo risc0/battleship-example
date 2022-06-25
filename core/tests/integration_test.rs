@@ -65,7 +65,8 @@ impl Battleship {
     }
 
     pub fn init(&self) -> Result<InitMessage> {
-        let mut prover = Prover::new(INIT_PATH, INIT_ID)?;
+        let elf_contents = std::fs::read(INIT_PATH).unwrap();
+        let mut prover = Prover::new(&elf_contents, INIT_ID)?;
         let vec = to_vec(&self.state).unwrap();
         prover.add_input(vec.as_slice())?;
         let receipt = prover.run()?;
@@ -91,7 +92,8 @@ impl Battleship {
         log::info!("on_turn_msg: {:?}", msg);
         let params = RoundParams::new(self.state.clone(), msg.shot.x, msg.shot.y);
 
-        let mut prover = Prover::new(TURN_PATH, TURN_ID)?;
+        let elf_contents = std::fs::read(TURN_PATH).unwrap();
+        let mut prover = Prover::new(&elf_contents, TURN_ID)?;
         let vec = to_vec(&params).unwrap();
         prover.add_input(vec.as_slice())?;
         let receipt = prover.run()?;

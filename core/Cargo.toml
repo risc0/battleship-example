@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-risc0-zkvm-core = { version = "0.9", default-features = false, features = ["pure"] }
+risc0-zkvm-core = { version = "0.10", default-features = false, features = ["pure"] }
 serde = { version = "1.0", default-features = false }
 
 [dev-dependencies]
@@ -12,5 +12,5 @@ battleship-methods = { path = "../methods" }
 ctor = "0.1"
 env_logger = "0.8"
 log = "0.4"
-risc0-zkvm-host = "0.9"
-risc0-zkvm-serde = "0.9"
+risc0-zkvm-host = "0.10"
+risc0-zkvm-serde = "0.10"
