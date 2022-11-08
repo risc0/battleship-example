@@ -3,4 +3,3 @@ contract/neardev/
 dist/
 target/
 Cargo.lock
-s
