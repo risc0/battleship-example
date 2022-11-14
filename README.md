@@ -46,6 +46,11 @@ Launch the web service:
 cargo run --bin battleship-web-server --release
 ```
 
+Install trunk:
+```
+cargo install trunk
+```
+
 Launch the web client:
 ```
 cd web/client
