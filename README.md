@@ -1,4 +1,6 @@
 # Battleship (Rust)
+*Edit (Nov 2022): There have been breaking changes to NEAR integration since we built this demo; we're leaving this example up, but builders beware that we're not able to provide a whole lot of support for this example at the moment. Thank you for your understanding.*
+
 *This README includes instructions to install and play RISC Zero Battleship on your own machine. For more information about RISC Zero Battleship, check out the tutorials at [www.risczero.com](https://www.risczero.com). For questions, find us on [Discord](https://discord.gg/risczero).*
 
 `RISC Zero Battleship` is a 2-player hidden information game implemented in Rust on the NEAR Network.
