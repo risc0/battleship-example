@@ -15,16 +15,16 @@
 #![no_main]
 #![no_std]
 
-use risc0_zkvm_guest::{env, sha};
+use risc0_zkvm::guest::env;
 
 use battleship_core::GameState;
 
-risc0_zkvm_guest::entry!(main);
+risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
     let state: GameState = env::read();
     if !state.check() {
         panic!("Invalid GameState");
     }
-    env::commit(&sha::digest(&state));
+    env::commit(&state.digest());
 }

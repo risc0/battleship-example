@@ -15,19 +15,19 @@
 #![no_main]
 #![no_std]
 
-use risc0_zkvm_guest::{env, sha};
+use risc0_zkvm::guest::env;
 
 use battleship_core::{RoundCommit, RoundParams};
 
-risc0_zkvm_guest::entry!(main);
+risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
     let params: RoundParams = env::read();
     let result = params.process();
     env::write(&result);
     env::commit(&RoundCommit {
-        old_state: *sha::digest(&params.state),
-        new_state: *sha::digest(&result.state),
+        old_state: params.state.digest(),
+        new_state: result.state.digest(),
         shot: params.shot,
         hit: result.hit,
     });

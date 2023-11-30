@@ -1,11 +1,5 @@
 [workspace]
-members = [
-  "core",
-  "methods",
-  "web/client",
-  "web/server",
-]
+resolver = "2"
+members = ["core", "methods", "web/client", "web/server"]
 
-exclude = [
-  "contract",
-]
+exclude = ["contract"]
