@@ -12,14 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use anyhow::bail;
+use anyhow::Result;
+use test_log::test;
+
 use battleship_core::{
     GameState, HitType, Position, RoundCommit, RoundParams, RoundResult, Ship, ShipDirection,
 };
-use battleship_methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
-use log::LevelFilter;
-use risc0_zkvm_core::Digest;
-use risc0_zkvm_host::{Exception, Prover, Receipt, Result};
-use risc0_zkvm_serde::{from_slice, to_slice, to_vec};
+use battleship_methods::{INIT_ELF, INIT_ID, TURN_ELF, TURN_ID};
+use risc0_zkvm::{
+    default_prover,
+    serde::{from_slice, to_vec},
+    sha::Digest,
+    ExecutorEnv, Receipt,
+};
 
 pub struct InitMessage {
     receipt: Receipt,
@@ -43,15 +49,13 @@ pub struct Battleship {
 
 impl InitMessage {
     pub fn get_state(&self) -> Result<Digest> {
-        let msg = self.receipt.get_journal_vec()?;
-        Ok(from_slice(msg.as_slice()).unwrap())
+        Ok(self.receipt.journal.decode()?)
     }
 }
 
 impl RoundMessage {
     pub fn get_commit(&self) -> Result<RoundCommit> {
-        let msg = self.receipt.get_journal_vec()?;
-        Ok(from_slice(msg.as_slice()).unwrap())
+        Ok(self.receipt.journal.decode()?)
     }
 }
 
@@ -65,11 +69,9 @@ impl Battleship {
     }
 
     pub fn init(&self) -> Result<InitMessage> {
-        let elf_contents = std::fs::read(INIT_PATH).unwrap();
-        let mut prover = Prover::new(&elf_contents, INIT_ID)?;
-        let vec = to_vec(&self.state).unwrap();
-        prover.add_input(vec.as_slice())?;
-        let receipt = prover.run()?;
+        let prover = default_prover();
+        let env = ExecutorEnv::builder().write(&self.state)?.build()?;
+        let receipt = prover.prove_elf(env, INIT_ELF)?;
         Ok(InitMessage { receipt })
     }
 
@@ -83,22 +85,22 @@ impl Battleship {
 
     pub fn turn(&mut self, x: u32, y: u32) -> TurnMessage {
         let shot = Position::new(x, y);
-        log::info!("turn: {}", shot);
+        log::info!("turn: {shot}");
         self.last_shot = shot.clone();
         TurnMessage { shot: shot.clone() }
     }
 
     pub fn on_turn_msg(&mut self, msg: &TurnMessage) -> Result<RoundMessage> {
-        log::info!("on_turn_msg: {:?}", msg);
+        log::info!("on_turn_msg: {msg:?}");
         let params = RoundParams::new(self.state.clone(), msg.shot.x, msg.shot.y);
-
-        let elf_contents = std::fs::read(TURN_PATH).unwrap();
-        let mut prover = Prover::new(&elf_contents, TURN_ID)?;
-        let vec = to_vec(&params).unwrap();
-        prover.add_input(vec.as_slice())?;
-        let receipt = prover.run()?;
-        let vec = prover.get_output_vec()?;
-        let result = from_slice::<RoundResult>(vec.as_slice()).unwrap();
+        let prover = default_prover();
+        let mut output = Vec::new();
+        let env = ExecutorEnv::builder()
+            .write(&params)?
+            .stdout(&mut output)
+            .build()?;
+        let receipt = prover.prove_elf(env, TURN_ELF)?;
+        let result: RoundResult = from_slice(&output)?;
         self.state = result.state.clone();
         Ok(RoundMessage { receipt })
     }
@@ -107,26 +109,22 @@ impl Battleship {
         log::info!("on_round_msg");
         msg.receipt.verify(TURN_ID)?;
         let commit = msg.get_commit()?;
-        log::info!("  commit: {:?}", commit);
+        log::info!("  commit: {commit:?}");
 
         if commit.old_state != self.peer_state {
-            return Err(Exception::new(
-                format!(
-                    "Cheater: state mismatch. old_state ({}) != peer_state ({})",
-                    commit.old_state, self.peer_state
-                )
-                .as_str(),
-            ));
+            bail!(
+                "Cheater: state mismatch. old_state ({}) != peer_state ({})",
+                commit.old_state,
+                self.peer_state
+            );
         }
 
         if commit.shot != self.last_shot {
-            return Err(Exception::new(
-                format!(
-                    "Cheater: shot mismatch. cur_shot ({}) != last_shot ({})",
-                    commit.shot, self.last_shot
-                )
-                .as_str(),
-            ));
+            bail!(
+                "Cheater: shot mismatch. cur_shot ({}) != last_shot ({})",
+                commit.shot,
+                self.last_shot
+            );
         }
 
         self.peer_state = commit.new_state.clone();
@@ -142,31 +140,17 @@ fn round(player1: &mut Battleship, player2: &mut Battleship, x: u32, y: u32) -> 
         .unwrap()
 }
 
-#[ctor::ctor]
-fn init() {
-    env_logger::builder().filter_level(LevelFilter::Info).init();
-}
-
 #[test]
 fn serde() {
-    struct Logger;
-    impl risc0_zkvm_core::Log for Logger {
-        fn log(&self, msg: &str) {
-            log::info!("{}", msg);
-        }
-    }
-    static LOGGER: Logger = Logger;
-    risc0_zkvm_core::set_logger(&LOGGER);
     let commit = RoundCommit {
         old_state: Digest::new([0, 1, 2, 3, 4, 5, 6, 7]),
         new_state: Digest::new([8, 7, 6, 5, 4, 3, 2, 1]),
         shot: Position::new(1, 9),
         hit: HitType::Hit,
     };
-    let buf: &mut [u32] = &mut [0; 256];
-    let buf = to_slice(&commit, buf).unwrap();
-    log::info!("buf: {}, {:x?}", buf.len(), buf);
-    let result = from_slice(buf).unwrap();
+    let buf = to_vec(&commit).unwrap();
+    log::info!("buf: {}, {buf:x?}", buf.len());
+    let result = from_slice(&buf).unwrap();
     assert_eq!(commit, result);
 }
 

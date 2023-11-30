@@ -14,14 +14,16 @@
 
 use std::net::{Ipv4Addr, SocketAddr};
 
+use anyhow::Result;
 use axum::{http::StatusCode, response::IntoResponse, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
+use base64::{engine::general_purpose::STANDARD, Engine};
 use battleship_core::{GameState, RoundParams, RoundResult};
-use battleship_methods::{INIT_ID, INIT_PATH, TURN_ID, TURN_PATH};
-use risc0_zkvm_host::Prover;
+use battleship_methods::{INIT_ELF, TURN_ELF};
+use risc0_zkvm::{default_prover, serde::from_slice, ExecutorEnv};
 
 #[derive(Deserialize, Serialize)]
 pub struct Receipt {
@@ -38,20 +40,12 @@ pub struct TurnResult {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
-        // Filter spans based on the RUST_LOG env var.
-        .with(tracing_subscriber::EnvFilter::new(
-            "info,server,tower_http=debug",
-        ))
-        // Send a copy of all spans to stdout as JSON.
         .with(
-            tracing_subscriber::fmt::layer()
-                .with_target(false)
-                .with_level(true)
-                .compact(),
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info,server,tower_http=debug,axum::rejection=trace".into()),
         )
-        // Install this registry as the global tracing registry.
-        .try_init()
-        .unwrap();
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let app = Router::new()
         .route("/prove/init", post(prove_init))
@@ -59,45 +53,35 @@ async fn main() {
         .layer(TraceLayer::new_for_http());
 
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, 3000));
-    tracing::info!("listening on {}", addr);
-    let server = axum::Server::bind(&addr).serve(app.into_make_service());
-
-    server.await.unwrap();
+    tracing::info!("listening on {addr}");
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
-fn do_init_proof(name: &str, input: GameState) -> Result<String, risc0_zkvm_host::Exception> {
-    let elf_contents = std::fs::read(name).unwrap();
-    let mut prover = Prover::new(&elf_contents, INIT_ID)?;
-    let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
-    prover.add_input(vec.as_slice())?;
-    let receipt = prover.run()?;
-    let receipt = Receipt {
-        journal: receipt.get_journal().unwrap().to_vec(),
-        seal: receipt.get_seal().unwrap().to_vec(),
-    };
-    Ok(base64::encode(bincode::serialize(&receipt).unwrap()))
+fn do_init_proof(input: GameState) -> Result<String> {
+    let prover = default_prover();
+    let env = ExecutorEnv::builder().write(&input)?.build()?;
+    let receipt = prover.prove_elf(env, INIT_ELF)?;
+    Ok(STANDARD.encode(bincode::serialize(&receipt).unwrap()))
 }
 
-fn do_turn_proof(name: &str, input: RoundParams) -> Result<TurnResult, risc0_zkvm_host::Exception> {
-    let elf_contents = std::fs::read(name).unwrap();
-    let mut prover = Prover::new(&elf_contents, TURN_ID)?;
-    let vec = risc0_zkvm_serde::to_vec(&input).unwrap();
-    prover.add_input(vec.as_slice())?;
-    let receipt = prover.run()?;
-    let receipt = Receipt {
-        journal: receipt.get_journal().unwrap().to_vec(),
-        seal: receipt.get_seal().unwrap().to_vec(),
-    };
-    let vec = prover.get_output_vec()?;
-    let result = risc0_zkvm_serde::from_slice::<RoundResult>(vec.as_slice()).unwrap();
+fn do_turn_proof(input: RoundParams) -> Result<TurnResult> {
+    let prover = default_prover();
+    let mut output = Vec::new();
+    let env = ExecutorEnv::builder()
+        .write(&input)?
+        .stdout(&mut output)
+        .build()?;
+    let receipt = prover.prove_elf(env, TURN_ELF)?;
+    let result: RoundResult = from_slice(&output)?;
     Ok(TurnResult {
         state: result,
-        receipt: base64::encode(bincode::serialize(&receipt).unwrap()),
+        receipt: STANDARD.encode(bincode::serialize(&receipt).unwrap()),
     })
 }
 
 async fn prove_init(Json(payload): Json<GameState>) -> impl IntoResponse {
-    let out = match do_init_proof(INIT_PATH, payload) {
+    let out = match do_init_proof(payload) {
         Ok(receipt) => receipt,
         Err(_e) => {
             return (
@@ -110,7 +94,7 @@ async fn prove_init(Json(payload): Json<GameState>) -> impl IntoResponse {
 }
 
 async fn prove_turn(Json(payload): Json<RoundParams>) -> impl IntoResponse {
-    let out = match do_turn_proof(TURN_PATH, payload) {
+    let out = match do_turn_proof(payload) {
         Ok(receipt) => receipt,
         Err(_e) => {
             return (

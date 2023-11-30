@@ -4,13 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-risc0-zkvm-core = { version = "0.10", default-features = false, features = ["pure"] }
+bytemuck = "1.14"
+risc0-zkvm = { version = "0.19", default-features = false }
 serde = { version = "1.0", default-features = false }
 
 [dev-dependencies]
+anyhow = "1.0"
 battleship-methods = { path = "../methods" }
-ctor = "0.1"
-env_logger = "0.8"
+env_logger = "0.10"
 log = "0.4"
-risc0-zkvm-host = "0.10"
-risc0-zkvm-serde = "0.10"
+risc0-zkvm = "0.19"
+test-log = "0.2"

@@ -14,11 +14,15 @@
 
 #![cfg_attr(not(test), no_std)]
 
+extern crate alloc;
+
 use core::fmt::Display;
 
+use risc0_zkvm::{
+    serde::to_vec,
+    sha::{Digest, Impl, Sha256},
+};
 use serde::{Deserialize, Serialize};
-
-use risc0_zkvm_core::Digest;
 
 pub const NUM_SHIPS: usize = 5;
 pub const BOARD_SIZE: usize = 10;
@@ -151,6 +155,11 @@ impl GameState {
             }
         }
         true
+    }
+
+    pub fn digest(&self) -> Digest {
+        let bytes = to_vec(&self).unwrap();
+        *Impl::hash_bytes(bytemuck::cast_slice(&bytes))
     }
 }
 
